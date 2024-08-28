@@ -1,16 +1,25 @@
+#### Importing Libraries ####
 library(dplyr)
 library(lubridate)
 library(tidyverse)
 library(tidyr)
+library(psych)
+library(pastecs)
 
-
+# Importing Dataset
 nypd = read_csv(url("https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv"))
+
+#Let's check a summary of the data:
+
+head(nypd) #Visualize the first rows and columns of the dataset
+
+summary(nypd) #Statistical summary of the data
 
 #Correcting time and date type
 nypd <- nypd %>% mutate(OCCUR_DATE = mdy(OCCUR_DATE))
 nypd <- nypd %>% mutate(HOUR = hour(hms(OCCUR_TIME)))
 
-#Dropping columns I won't use for this analysis
+#Dropping columns we won't use for this analysis
 nypd <- nypd %>% select(-c(PRECINCT,X_COORD_CD,Y_COORD_CD, Latitude, Longitude, Lon_Lat, LOC_CLASSFCTN_DESC, INCIDENT_KEY,JURISDICTION_CODE))
 
 #Grouping by Borough (district) and the Victims' Sex, so we can get a count of cases
@@ -19,7 +28,7 @@ grouped = nypd %>% group_by(BORO,OCCUR_DATE, VIC_SEX) %>% summarise(total_count 
 # Plotting to see in which borough the most shooting happened
 grouped %>% 
   count(OCCUR_DATE, VIC_SEX, BORO) %>% 
-  ggplot(aes(y = n, x = BORO, fill = interaction(VIC_SEX))) +
+  ggplot(aes(y = total_count, x = BORO, fill = interaction(VIC_SEX))) +
   geom_bar(stat = "identity", position = "stack")+
   scale_fill_manual(values = c("lightpink","lightblue","red"))+
   labs(y = "# of Shootings", x = "Borough", fill = "Victim's Sex")+
